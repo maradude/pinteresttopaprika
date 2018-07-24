@@ -1,0 +1,14 @@
+{
+  "name": "pinteresttopaprika",
+  "version": "1.0.0",
+  "description": "save pinterest stuff to paprika cooking app",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Martti",
+  "license": "ISC",
+  "dependencies": {
+    "paprika-api": "^1.0.3"
+  }
+}
