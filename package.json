@@ -9,6 +9,10 @@
   "author": "Martti",
   "license": "ISC",
   "dependencies": {
-    "paprika-api": "^1.0.3"
+    "paprika-api": "^1.0.3",
+    "puppeteer": "^1.6.0-next.1532381444032"
+  },
+  "devDependencies": {
+    "@types/puppeteer": "^1.5.1"
   }
 }
