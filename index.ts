@@ -1,12 +1,10 @@
-// import { PaprikaApi } from 'paprika-api';
+import { PaprikaApi } from 'paprika-api';
 import * as puppeteer from 'puppeteer';
+import {PDK} from './sdk';
 
-// const testPage = "https://www.kingarthurflour.com/recipes/homemade-whole-grain-pancake-mix-recipe";
-// const testPage = "https://www.seriouseats.com/2017/11/sweet-potato-quesadillas.html"
-// const testPage = "https://www.budgetbytes.com/easy-homemade-teriyaki-sauce-or-marinade/"
-// const testPage = "http://pastanjauhantaa.blogspot.com/2009/01/lohiceviche-salaattipedill.html"
 const testPage = "https://www.jamieoliver.com/recipes/salmon-recipes/sorta-salmon-nicoise/"
-// const paprika = "https://www.paprikaapp.com/bookmarklet/v1/?token=86fa45ba75900f87&timestamp=1532454061328";
+
+const pinterestBaseUrl = "https://api.pinterest.com/v1"
 
 const paprika = {
     url:"https://www.paprikaapp.com/bookmarklet/v1/?token=86fa45ba75900f87&timestamp=1532454061328",
@@ -14,6 +12,15 @@ const paprika = {
     content:"",
     type:""
 };
+const access_token_martti = "AoWd6Hg6z0Dyn-PymT9oQfXV8xU7FUSedqkYzrlFGysiFIA-tgU8ADAAAPAkRRvEhf_AOzEAAAAA&state=768uyFys"
+// const access_code_martti = "06a3c044209cd720"
+
+/*
+example request:
+https://api.pinterest.com/v1/boards/aukia/recipes-for-the-impatient/pins/
+?access_token=AoWd6Hg6z0Dyn-PymT9oQfXV8xU7FUSedqkYzrlFGysiFIA-tgU8ADAAAPAkRRvEhf_AOzEAAAAA&state=768uyFys
+&limit=100
+*/
 
 // TODO: check if recipe scrapping was succesfull, if not log url
 
@@ -27,26 +34,27 @@ const timeoutOptions = {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
     await page.setViewport({ width: 1000, height: 500 });
-    console.log("wow")
+    console.log("Browser open...")
     await page.goto(testPage, timeoutOptions);
-    console.log("wow2")
+    console.log("Page loaded...")
     await page.addScriptTag(paprika)
-    console.log("wow3")
+    console.log("Script added...")
     await page.reload(timeoutOptions)
+    console.log("Done")
 
     await browser.close();
 })();
 
-// let paprikaApi = new PaprikaApi('martti@aukia.com', 'aWDNrPw7Zyq');
+let paprikaApi = new PaprikaApi('martti@aukia.com', 'aWDNrPw7Zyq');
 
 
-// // paprikaApi.recipes().then((recipes) => {
-// //     paprikaApi.recipe(recipes[0].uid).then((recipe) => {
-// //         console.log(recipe);
-// //     });
-// // });
+// paprikaApi.recipes().then((recipes) => {
+//     paprikaApi.recipe(recipes[0].uid).then((recipe) => {
+//         console.log(recipe);
+//     });
+// });
 
-// console.log(paprikaApi.status())
+console.log(paprikaApi.status())
 
 
 // function save_paprika_recipe() {
