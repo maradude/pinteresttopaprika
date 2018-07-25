@@ -8,19 +8,45 @@ interface Board {
 }
 
 interface Data {
-    url: String;
-    note: String;
-    link: String;
-    id: String;
+    url: string;
+    note: string;
+    link: string;
+    id: string;
 }
 
 interface Page {
-    cursor: String;
-    next: String;
+    cursor: string;
+    next: string;
 }
 
-async function getPins(url: string) {
+async function getPins(boardName: string) {
+    /*
+    gathers urls from given url
+    */
     let rest: rm.RestClient = new rm.RestClient('demo-app')
+    // let params = { access_token: access_token_martti, limit: 100}
+    console.log(boardName)
+    let data = await rest.get<Board>(boardName)
+    let board: Board = data["result"]
+    getLinks(board)
+}
+
+function getLinks(board: Board) {
+    for (let item in board["data"]) {
+        console.log(item["link"]) // replace with paprika function
+    }
+    console.log(board)
+    if (board["page"]["next"]) {
+        setTimeout(() => {
+            getPins(board["page"]["next"])
+        }, 5000);
+    }
+}
+
+function parseBoard(url:string) {
+    /*
+    modify url into just the name of the board, add options and pass string to getPins
+    */
     if (url.lastIndexOf('/') == url.length - 1) {
         var slice_value = -3
     }
@@ -29,14 +55,8 @@ async function getPins(url: string) {
     }
     let board: string = 'boards/' + url.split('/').slice(slice_value).join('/') + 'pins'
     let url_params = `?access_token=${access_token_martti}&limit=100`
-    // let params = { access_token: access_token_martti, limit: 100}
-    console.log(pinterestBaseUrl + board + url_params)
-    let data = await rest.get(pinterestBaseUrl + board + url_params)
-    console.log(data)
-}
-
-function getUrls(board: object){
-    for (let item in board[])
+    let boardSection = pinterestBaseUrl + board + url_params
+    getPins(boardSection)
 }
 
 /*
@@ -115,4 +135,4 @@ const access_token_martti = "AoWd6Hg6z0Dyn-PymT9oQfXV8xU7FUSedqkYzrlFGysiFIA-tgU
 // void (0);
 
 
-getPins("https://fi.pinterest.com/aukia/recipes-for-the-impatient/")
+parseBoard("https://fi.pinterest.com/aukia/recipes-for-the-impatient/")
