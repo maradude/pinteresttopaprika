@@ -144,7 +144,7 @@ function sleep(ms) {
             //var x = await page.addScriptTag({content: 'https:' + '//www.paprikaapp.com/bookmarklet/v1/?token=86fa45ba75900f87&timestamp=' + (new Date().getTime())})
             //var x = await page.evaluate(save_paprika_recipe);
             var x = page.evaluate(save_paprika_recipe);
-            await sleep(8000);
+            await sleep(10000);
         } catch(e) {
             console.log(e);
         }
