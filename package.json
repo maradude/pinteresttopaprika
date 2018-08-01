@@ -9,11 +9,13 @@
   "author": "Martti",
   "license": "ISC",
   "dependencies": {
+    "node-pinterest": "0.0.4",
     "paprika-api": "^1.0.3",
-    "puppeteer": "^1.6.0-next.1532381444032",
+    "puppeteer": "^1.6.1",
+    "request": "^2.87.0",
     "typed-rest-client": "^1.0.7"
   },
   "devDependencies": {
-    "@types/puppeteer": "^1.5.1"
+    "@types/puppeteer": "^1.6.0"
   }
 }

@@ -71,10 +71,11 @@ const testPage = "https://www.jamieoliver.com/recipes/salmon-recipes/sorta-salmo
 const pinterestBaseUrl = "https://api.pinterest.com/v1/"
 
 const paprika = {
-    url:"https://www.paprikaapp.com/bookmarklet/v1/?token=86fa45ba75900f87&timestamp=1532454061328",
-    path:"",
-    content:"",
-    type:""
+    //url:"https://www.paprikaapp.com/bookmarklet/v1/?token=86fa45ba75900f87&timestamp=1532454061328",
+    //url:"",
+    path:"./savePaprika.js",
+    // content:"",
+    //type:""
 };
 const access_token_martti = "AoWd6Hg6z0Dyn-PymT9oQfXV8xU7FUSedqkYzrlFGysiFIA-tgU8ADAAAPAkRRvEhf_AOzEAAAAA&state=768uyFys"
 // const access_code_martti = "06a3c044209cd720"
@@ -88,26 +89,72 @@ const access_token_martti = "AoWd6Hg6z0Dyn-PymT9oQfXV8xU7FUSedqkYzrlFGysiFIA-tgU
 
 // // TODO: check if recipe scrapping was succesfull, if not log url
 
-// const timeoutOptions = {
-//         // networkIdleTimeout: 5000,
-//         // waitUntil: 'networkidle',
-//         timeout: 3000000
-//     };
+const recipeList = ["https://www.kotikokki.net/reseptit/nayta/224721/Jauhelihak%C3%A4%C3%A4ryleet/",
+    "https://www.kotikokki.net/reseptit/nayta/34852/Pizzapohja%20%28pellillinen%29/",
+    "https://www.kotikokki.net/reseptit/nayta/137/Makaronilaatikko/",
+    "https://www.kotikokki.net/reseptit/nayta/113651/Karjalanpaisti/",
+    "https://www.kotikokki.net/reseptit/nayta/85886/BROILERIGRATIINI/",
+    "https://www.kotikokki.net/reseptit/nayta/42423/Pizza%20Dennis/"
+]
 
-// (async () => {
-//     const browser = await puppeteer.launch();
-//     const page = await browser.newPage();
-//     await page.setViewport({ width: 1000, height: 500 });
-//     console.log("Browser open...")
-//     await page.goto(testPage, timeoutOptions);
-//     console.log("Page loaded...")
-//     await page.addScriptTag(paprika)
-//     console.log("Script added...")
-//     await page.reload(timeoutOptions)
-//     console.log("Done")
+const recipeList2 = [
+    "https://www.kotikokki.net/reseptit/nayta/84941/Kaalilaatikko/",
+    "https://www.kotikokki.net/reseptit/nayta/46056/Mets%C3%A4nvartijan%20ROSVOPAISTI/",
+    "https://www.kotikokki.net/reseptit/nayta/65923/Lihapullat/",
+    "https://www.kotikokki.net/reseptit/nayta/37662/Lanttulaatikko/",
+    "https://www.kotikokki.net/reseptit/nayta/2048/Kanapasta/"
+]
 
-//     await browser.close();
-// })();
+function save_paprika_recipe() {
+    var d = document;
+    if (!d.body) return;
+    try {
+        var s = d.createElement('scr' + 'ipt');
+        s.setAttribute('src', d.location.protocol + '//www.paprikaapp.com/bookmarklet/v1/?token=86fa45ba75900f87&timestamp=' + (new Date().getTime()));
+        d.body.appendChild(s);
+    } catch (e) { }
+};
+
+const timeoutOptions = {
+        // networkIdleTimeout: 5000,
+        // waitUntil: 'networkidle',
+    timeout: 60000
+    };
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+//const pap_script = "function save_paprika_recipe(){var d=document;if(!d.body)return;try{var s=d.createElement('scr'+'ipt');s.setAttribute('src',d.location.protocol+'//www.paprikaapp.com/bookmarklet/v1/?token=86fa45ba75900f87&timestamp='+(new Date().getTime()));d.body.appendChild(s);}catch(e){}};save_paprika_recipe()"
+
+(async () => {
+    console.log("function start")
+    //const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({ headless: false })
+    console.log("puppeteer open")
+    const page = await browser.newPage();
+    console.log("new page open")
+    await page.setViewport({ width: 1000, height: 500 });
+    console.log("Browser open...")
+    for (let recipe of recipeList2) {
+        await page.goto(recipe, timeoutOptions);
+        console.log(`Page loaded... ${recipe}`);
+        try {
+            // var x = await page.addScriptTag(paprika);
+            //var x = await page.addScriptTag({content: 'https:' + '//www.paprikaapp.com/bookmarklet/v1/?token=86fa45ba75900f87&timestamp=' + (new Date().getTime())})
+            //var x = await page.evaluate(save_paprika_recipe);
+            var x = page.evaluate(save_paprika_recipe);
+            await sleep(8000);
+        } catch(e) {
+            console.log(e);
+        }
+        console.log(`Script added`)
+        await page.reload(timeoutOptions)
+    }
+    console.log("Done")
+
+    await browser.close();
+})();
 
 // let paprikaApi = new PaprikaApi('martti@aukia.com', 'aWDNrPw7Zyq');
 
@@ -135,4 +182,4 @@ const access_token_martti = "AoWd6Hg6z0Dyn-PymT9oQfXV8xU7FUSedqkYzrlFGysiFIA-tgU
 // void (0);
 
 
-parseBoard("https://fi.pinterest.com/aukia/recipes-for-the-impatient/")
+// parseBoard("https://fi.pinterest.com/aukia/recipes-for-the-impatient/")
