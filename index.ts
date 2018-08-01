@@ -129,8 +129,8 @@ function sleep(ms) {
 
 (async () => {
     console.log("function start")
-    //const browser = await puppeteer.launch();
-    const browser = await puppeteer.launch({ headless: false })
+    const browser = await puppeteer.launch();
+    // const browser = await puppeteer.launch({ headless: false })
     console.log("puppeteer open")
     const page = await browser.newPage();
     console.log("new page open")
