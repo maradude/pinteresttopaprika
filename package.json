@@ -1,21 +1,39 @@
 {
-  "name": "pinteresttopaprika",
-  "version": "1.0.0",
-  "description": "save pinterest stuff to paprika cooking app",
-  "main": "index.ts",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "Martti",
-  "license": "ISC",
-  "dependencies": {
-    "node-pinterest": "0.0.4",
-    "paprika-api": "^1.0.3",
-    "puppeteer": "^1.6.1",
-    "request": "^2.87.0",
-    "typed-rest-client": "^1.0.7"
-  },
-  "devDependencies": {
-    "@types/puppeteer": "^1.6.0"
-  }
+    "name": "pinteresttopaprika",
+    "version": "1.0.0",
+    "description": "save pinterest stuff to paprika cooking app",
+    "main": "index.ts",
+    "scripts": {
+        "test": "jest"
+    },
+    "author": "Martti",
+    "license": "ISC",
+    "dependencies": {
+        "node-pinterest": "0.0.4",
+        "paprika-api": "^1.0.3",
+        "puppeteer": "^1.6.1",
+        "request": "^2.87.0",
+        "toml": "^2.3.3",
+        "typed-rest-client": "^1.0.7"
+    },
+    "devDependencies": {
+        "@types/jest": "^23.3.1",
+        "@types/puppeteer": "^1.6.0",
+        "jest": "^23.4.2",
+        "ts-jest": "^23.0.1"
+    },
+    "jest": {
+        "transform": {
+            "^.+\\.tsx?$": "ts-jest"
+        },
+        "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+        "moduleFileExtensions": [
+            "ts",
+            "tsx",
+            "js",
+            "jsx",
+            "json",
+            "node"
+        ]
+    }
 }

@@ -5,6 +5,9 @@ import * as puppeteer from 'puppeteer';
 var PDK = require('node-pinterest');
 
 /*
+0. Rewrite code into OOP
+*/
+/*
 1. log in to paprika
 2. parse pinterest board urs
 3. parse pinterest usr boards
@@ -14,31 +17,35 @@ const access_token_martti = "AoWd6Hg6z0Dyn-PymT9oQfXV8xU7FUSedqkYzrlFGysiFIA-tgU
 var pinterest = PDK.init(access_token_martti);
 
 
-var options = {
+const options = {
     qs: {
         fields: "link",
         limit: 2
     }
 };
-async function getPins() {
-    var linkArray = [];
-    try {
-        var pinterestJSON = await pinterest.api('boards/aukia/recipes-for-the-impatient/pins', options);
-    } catch (e) {
-        console.log(e)
+async function getLinks(JSONBoard, Arr) {
+    for (let data of JSONBoard.data) {
+        Arr.push(data.link);
     }
-    for (let data of pinterestJSON.data) {
-        linkArray.push(data.link);
-    }
-    if (pinterestJSON.page) {
+    if (JSONBoard.page) {
         try {
-            var pinterestNEXT = await pinterest.api(pinterestJSON.next, options);
-            console.log(pinterestNEXT)
+            var pinterestNEXT = await pinterest.api(JSONBoard.next, options);
+            return getLinks(JSONBoard, Arr);
         } catch (e) {
-            console.log(e)
+            console.log(`SUCCESSIVE PINTEREST API CALL ERROR ${e}`)
         }
+        return Arr
     }
-    console.log(linkArray);
+}
+async function getPins(boardName) {
+    try {
+        var pinterestJSON = await pinterest.api(boardName, options);
+    } catch (e) {
+        console.log(`INITIAL PINTEREST API CALL ERROR: ${e}`)
+    }
+    var linkArray = []
+    linkArray.concat(await getLinks(pinterestJSON, []));
+    console.log(`Following LINKS: ${linkArray}`);
     return linkArray
 }
 
@@ -99,16 +106,24 @@ async function saveArrayToPaprika(linkArray) {
     console.log("Done")
 
     await browser.close();
+    console.log(fails)
     return fails
 };
 
-// var links = getPins();
-// saveArrayToPaprika(links);
+function parseUrlforName(str) {
+    var loc = new URL(str);
+    return loc.pathname
+}
 
-let paprikaApi = new PaprikaApi('martti@aukia.com', 'aWDNrPw7Zyq');
+// let testBoard = 'boards/aukia/recipes-for-the-impatient/pins'
+let testBoard = 'boards' + parseUrlforName('https://fi.pinterest.com/aukia/recipes-for-bbq/') + 'pins'
+var links = getPins(testBoard);
+saveArrayToPaprika(links);
 
-paprikaApi.recipes().then((recipes) => {
-    console.log(recipes.length)
-});
+// let paprikaApi = new PaprikaApi('martti@aukia.com', 'aWDNrPw7Zyq');
+
+// paprikaApi.recipes().then((recipes) => {
+//     console.log(recipes.length)
+// });
 
 // console.log(paprikaApi.status())
