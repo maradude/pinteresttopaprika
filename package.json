@@ -9,12 +9,12 @@
     "author": "Martti",
     "license": "ISC",
     "dependencies": {
+        "commander": "^2.17.0",
         "node-pinterest": "0.0.4",
         "paprika-api": "^1.0.3",
         "puppeteer": "^1.6.1",
         "request": "^2.87.0",
-        "toml": "^2.3.3",
-        "typed-rest-client": "^1.0.7"
+        "toml": "^2.3.3"
     },
     "devDependencies": {
         "@types/jest": "^23.3.1",

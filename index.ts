@@ -52,7 +52,7 @@ interface PinterestJSON {
 
 if (fs.existsSync('config.toml')) {
 const filePath = join(__dirname, 'config.toml');
-const configData: Config = toml.parse(fs.readFileSync(filePath, {
+var configData: Config = toml.parse(fs.readFileSync(filePath, {
     encoding: 'utf-8'
 }))} else {
     fs.writeFileSync('config.toml', `[Pinterest]
@@ -96,11 +96,10 @@ class PinterestDataHandler {
         await page.goto(url)
         await page.click("#dialog_footer > button:nth-child(2)")
         await page.waitForNavigation()
-        const response = new URL(page.url()) //https://localhost/?state=768uyFys&code=3b981b816dca111a
+        const response = new URL(page.url())
 
         const authCode = response.searchParams.get('code')
         const client_secret = configData.Dev.PinterestAppSecret
-        const readl_code = "https://api.pinterest.com/v1/oauth/token?grant_type=authorization_code&client_id=4979621238361046710&client_secret=9853c2fc70cc9212f9b5ae44af606338f3d3acf941a298487529c54e2599df08&code=21875b2098a99bb8"
         const accessToken = `https://api.pinterest.com/v1/oauth/token?grant_type=authorization_code&client_id=${client_id}&client_secret=${client_secret}&code=${authCode}`
         request.get(accessToken).pipe(fs.createWriteStream('token_response'))
 
