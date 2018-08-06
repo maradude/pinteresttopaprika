@@ -1,28 +1,37 @@
+var program = require('commander');
 import {
     PaprikaApi
 } from 'paprika-api';
 import * as puppeteer from 'puppeteer';
-// var PDK = require('node-pinterest');
 import * as PDK from 'node-pinterest'
 import * as toml from 'toml';
 import * as fs from 'fs';
-import {join} from 'path';
+import * as request from 'request'
+import {
+    join
+} from 'path';
 
-/*
-0. Rewrite code into OOPh
-*/
-/*
-1. log in to paprika
-2. parse pinterest board urs
-3. parse pinterest usr boards
-4. JSON file as input
-*/
+interface PinterestConfig {
+    PinterestPassword: string;
+    PinterestUser: string;
+}
 
-interface Config {
-    PinterestToken: string;
+interface PaprikaConfig {
     PaprikaBookmarkletToken: string;
     PaprikaUser: string;
     PaprikaPassword: string;
+}
+
+interface DevConfig {
+    PinterestToken: string;
+    PinterestAppID: string;
+    PinterestAppSecret: string;
+}
+
+interface Config {
+    Pinterest: PinterestConfig;
+    Paprika: PaprikaConfig;
+    Dev: DevConfig;
 }
 
 interface PinterestData {
@@ -35,138 +44,260 @@ interface PinterestPage {
     next: string;
 }
 
-interface PinterestJSON{
-    data: Array<PinterestData>
-    page: PinterestPage
+interface PinterestJSON {
+    data: PinterestData[];
+    page: PinterestPage;
+
 }
 
+if (fs.existsSync('config.toml')) {
 const filePath = join(__dirname, 'config.toml');
-const configData: Config = toml.parse(fs.readFileSync(filePath, { encoding: 'utf-8' }))
-console.log(configData.PinterestToken)
+const configData: Config = toml.parse(fs.readFileSync(filePath, {
+    encoding: 'utf-8'
+}))} else {
+    fs.writeFileSync('config.toml', `[Pinterest]
+PinterestUser = ""
+PinterestPassword = ""
+[Paprika]
+PaprikaBookmarkletToken = ""
+PaprikaUser = ""
+PaprikaPassword = ""
+[Dev]
+PinterestAppID = ""
+PinterestAppSecret = ""
+PinterestToken = ""
+`)
+console.log("a 'config.toml' file has been created please fill as instructed by readme.md")
+process.exit()
+}
 
-class PinteresttoPaprika{
+class PinterestDataHandler {
     pinterest;
-    constructor(token: string){
-        this.pinterest = PDK.init(configData.PinterestToken)
+    options: Object;
+    links: Array < string > ;
+    constructor(token: string) {
+        this.pinterest = PDK.init(token)
+        this.links = []
+        this.options = {
+            qs: {
+                fields: "link",
+                limit: 100
+            }
+        };
+    }
+
+    async getToken(page: puppeteer.Page) {
+        const redirect_uri = "https://localhost/"
+        const client_id = configData.Dev.PinterestAppID
+        const scope = "read_public"
+        const state = "768uyFys"
+
+        const url = `https://api.pinterest.com/oauth/?response_type=code&redirect_uri=${redirect_uri}&client_id=${client_id}&scope=${scope}&state=${state}`
+        await page.goto(url)
+        await page.click("#dialog_footer > button:nth-child(2)")
+        await page.waitForNavigation()
+        const response = new URL(page.url()) //https://localhost/?state=768uyFys&code=3b981b816dca111a
+
+        const authCode = response.searchParams.get('code')
+        const client_secret = configData.Dev.PinterestAppSecret
+        const readl_code = "https://api.pinterest.com/v1/oauth/token?grant_type=authorization_code&client_id=4979621238361046710&client_secret=9853c2fc70cc9212f9b5ae44af606338f3d3acf941a298487529c54e2599df08&code=21875b2098a99bb8"
+        const accessToken = `https://api.pinterest.com/v1/oauth/token?grant_type=authorization_code&client_id=${client_id}&client_secret=${client_secret}&code=${authCode}`
+        request.get(accessToken).pipe(fs.createWriteStream('token_response'))
+
+
+    }
+
+    async geta(board: string) {
+        var links = []
+        var target = board
+        try {
+            do {
+                var data: PinterestJSON = await this.pinterest.api(target, this.options)
+                for (let element of await data.data) {
+                    links.push(element.link)
+                }
+                target = data.page.next
+                console.log(target)
+            } while (target);
+            return links
+        } catch (e) {
+            console.error("issue with pinterest.api()")
+            console.log(data)
+            console.log(links)
+            console.log(target)
+            console.error(e)
+        }
     }
 }
+const write_file = (file, data) => new Promise((resolve, reject) => {
+    fs.writeFile(file, data, 'utf8', error => {
+        if (error) {
+            console.error(error);
 
-const access_token_martti: string = "AoWd6Hg6z0Dyn-PymT9oQfXV8xU7FUSedqkYzrlFGysiFIA-tgU8ADAAAPAkRRvEhf_AOzEAAAAA"
-var pinterest = PDK.init(access_token_martti);
-
-
-const options = {
-    qs: {
-        fields: "link",
-        limit: 20
-    }
-};
-async function getLinks(JSONBoard: PinterestJSON, Arr: Array<string>) {
-    for (let data of JSONBoard.data) {
-        Arr.push(data.link);
-    }
-    if (JSONBoard.page) {
-        const links = pinterest.api(JSONBoard.page.next, options).then((result) => {
-            console.log(result)
-            getLinks(result, Arr)
-    }).catch((err) => {
-            console.log(`SUCCESSIVE PINTEREST API CALL ERROR ${err}`)
+            reject(false);
+        } else {
+            resolve(true);
+        }
     });
-}
-    return Arr
-}
-async function getPins(boardName: string) {
-    const links = pinterest.api(boardName, options).then((result) => {
-        console.log(result)
-        getLinks(result, [])
-    }).catch((err) => {
-        console.log(`INITIAL PINTEREST API CALL ERROR: ${err}`)
+});
+
+const read_file = file => new Promise((resolve, reject) => {
+    return fs.readFile(file, 'utf8', (error, data) => {
+        if (error) {
+            console.error(error);
+
+            reject(false);
+        } else {
+            resolve(data);
+        }
     });
-    var linkArray: Array<string> = [];
-    linkArray.concat(links);
-    console.log(`Following LINKS: ${linkArray}`);
-    return linkArray
-}
+});
 
 function save_paprika_recipe() {
     var d = document;
     if (!d.body) return;
     try {
         var s = d.createElement('scr' + 'ipt');
-        s.setAttribute('src', d.location.protocol + '//www.paprikaapp.com/bookmarklet/v1/?token=86fa45ba75900f87&timestamp=' + (new Date().getTime()));
+        s.setAttribute('src', d.location.protocol + `//www.paprikaapp.com/bookmarklet/v1/?token=${configData.Paprika.PaprikaBookmarkletToken}&timestamp=` + (new Date().getTime()));
         d.body.appendChild(s);
     } catch (e) {}
 };
 
-const timeoutOptions = {
-    timeout: 60000
-};
+const timeoutOptions = { timeout:120000, waitUntil:'networkidle0'}
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function saveArrayToPaprika(linkArray: Array<string>) {
-    var fails: Array<string> = []
-    let paprikaApi = new PaprikaApi('martti@aukia.com', 'aWDNrPw7Zyq');
+async function saveArrayToPaprika(linkArray: Array < string > , page: puppeteer.Page, browser: puppeteer.Browser) {
+    console.log(`LinkArray for saveArrayToPaprika: ${linkArray}`)
+    var fails: Array < string > = []
+    let paprikaApi = new PaprikaApi(configData.Paprika.PaprikaUser, configData.Paprika.PaprikaPassword);
     var paprikaRecipeCount: number = await paprikaApi.recipes().then((recipes) => {
         return recipes.length
     });
-    console.log("function start")
-    const browser = await puppeteer.launch();
-    console.log("puppeteer open")
-    const page = await browser.newPage();
-    console.log("new page open")
-    await page.setViewport({
-        width: 1000,
-        height: 500
-    });
-    console.log("Browser open...")
     for (let recipe of linkArray) {
-        await page.goto(recipe, timeoutOptions);
+        await page.goto(recipe, { timeout: 300000, waitUntil:'networkidle0'}); // timeoutOptions
         console.log(`Page loaded... ${recipe}`);
         try {
-            var x = page.evaluate(save_paprika_recipe);
-            await sleep(10000);
+            // await page.evaluate(save_paprika_recipe);
+            await page.addScriptTag({
+                url: `https://www.paprikaapp.com/bookmarklet/v1/?token=${configData.Paprika.PaprikaBookmarkletToken}&timestamp=` + (new Date().getTime())
+            })
+            await page.waitFor(6000)
         } catch (e) {
-            console.log(e);
+            console.error(e);
         }
         console.log(`Script added`)
         paprikaApi.recipes().then((recipes) => {
             if (recipes.length > paprikaRecipeCount) {
                 paprikaRecipeCount = recipes.length;
             } else {
+                console.error(`FAILED: ${recipe}`)
                 fails.push(recipe)
             }
 
         });
-        await page.reload(timeoutOptions)
     }
     console.log("Done")
 
-    await browser.close();
-    console.log(fails)
+    console.log("Following failed: " + fails + "see stderr for all errors")
     return fails
 };
+
+async function openChromium() {
+    console.log("launching chromium...")
+    const browser = await puppeteer.launch({
+        timeout: 120000,
+        headless: true
+    });
+    const page = await browser.newPage();
+    await page.setViewport({
+        width: 1000,
+        height: 500
+    });
+    console.log("Browser open...")
+    return {
+        page: page,
+        browser: browser
+    }
+}
+
+async function loginToPinterest(page: puppeteer.Page) {
+    const USERNAME_SELECTOR = "#email"
+    const PASSWORD_SELECTOR = "#password"
+    const LOGIN_BTN_SELECTOR = "body > div:nth-child(1) > div > div > div:nth-child(1) > div > div > div:nth-child(4) > div:nth-child(1) > form > button"
+
+    await page.goto("https://www.pinterest.com/login/", {timeout:120000, waitUntil:'networkidle0'})
+
+    await page.click(USERNAME_SELECTOR)
+    await page.keyboard.type(configData.Pinterest.PinterestUser)
+
+    await page.click(PASSWORD_SELECTOR)
+    await page.keyboard.type(configData.Pinterest.PinterestPassword)
+
+    await page.click(LOGIN_BTN_SELECTOR)
+
+    await page.waitForNavigation()
+    await write_file('cookies.txt', JSON.stringify(await page.cookies()))
+    return await page.cookies
+
+    return "Logged into Pinterest"
+}
 
 function convertUrlToBoard(str: string) {
     var loc: URL = new URL(str);
     return 'boards' + loc.pathname + 'pins'
 }
 
-// let testBoard = 'boards/aukia/recipes-for-the-impatient/pins'
-let testBoard = convertUrlToBoard('https://fi.pinterest.com/aukia/recipes-for-bbq/')
-getPins(testBoard).then((result) => {
-    saveArrayToPaprika(result)
-}).catch((err) => {
-    console.log(`ISSUE WITH GETTING PINS ${err}`)
-});;
+async function main(board) {
+    try {
+        const {
+            page,
+            browser
+        } = await openChromium()
+        if (fs.existsSync('cookies.txt')) {
+            const cookie: any = await read_file('cookies.txt') || '[]' // type issues
+            await page.setCookie(...JSON.parse(cookie))
+        } else {
+            console.log(await loginToPinterest(page))
+        }
+        if (!configData.Dev.PinterestToken) {
+            try {
+                pin.getToken(page)
+            } catch (e) {
+                console.error(`Issue gathering access token: ${e}`)
+            }
+        }
+        await saveArrayToPaprika(await pin.geta(board), page, browser)
+        await browser.close();
+    } catch (err) {
+        console.log(`ISSUE WITH GETTING PINS ${err}`)
+    }
+}
 
-// let paprikaApi = new PaprikaApi('martti@aukia.com', 'aWDNrPw7Zyq');
-
-// paprikaApi.recipes().then((recipes) => {
-//     console.log(recipes.length)
-// });
-
-// console.log(paprikaApi.status())
-// export { convertUrlToBoard, saveArrayToPaprika, getPins, getLinks }
+function cli() {
+    program
+        .arguments('<url>')
+        .option('-u, --username <username>', 'Paprika sync email')
+        .option('-p, --password <password>', 'Paprika sync password')
+        .option('-t, --token <token>', 'Pinterest User Token')
+        .option('-b, --bookmarklet-token <bookmarklet>', 'Paprika bookmarklet')
+        .action(function () {
+            if (program.username) {
+                configData.Paprika.PaprikaUser = program.username
+            } else if (program.password) {
+                configData.Paprika.PaprikaPassword = program.password
+            } else if (program.token) {
+                configData.Dev.PinterestToken = program.token
+            } else if (program.bookmarklet) {
+                configData.Paprika.PaprikaBookmarkletToken = program.bookmarklet
+            }
+        })
+        .parse(process.argv);
+    return program.args[0]
+}
+const board = convertUrlToBoard(cli())
+const token = configData.Dev.PinterestToken
+var pin = new PinterestDataHandler(token);
+main(board)
