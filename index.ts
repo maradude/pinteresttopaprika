@@ -153,7 +153,7 @@ async function addPaprikaScript(linkArray: string[], page: puppeteer.Page, timeo
     });
     if (progress){
     var bar = new ProgressBar({
-        schema: ':bar, :precent',
+        schema: ':bar, :percent',
         total: linkArray.length
     })}
     for (let recipe of linkArray) {

@@ -1,6 +1,6 @@
 {
     "name": "pinteresttopaprika",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "save pinterest stuff to paprika cooking app",
     "main": "index.ts",
     "scripts": {
