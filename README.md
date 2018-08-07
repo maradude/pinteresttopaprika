@@ -8,8 +8,7 @@ The script uses the url for a public pinterest board to call the Pinterest API t
 
 On first run the bookmarklet will create an config.toml file if one doesn't already exist in the directory. After this has been filled with the correct infromation, the application will run and if you don't have a 'cookies.txt', the script will login to Pinterest and save the cookies in a new 'cookies.txt' file in the current directory. In future login to Pinterest in not required.
 
-#### NOTE:
- the script is slow and processing each link can take a few seconds or even up to a minute or two. So larger boards can take a while to process
+__NOTE:__ The script is slow and processing each link can take a few seconds or even up to a minute or two. So larger boards can take a while to process
 
 ### Below is what your config.toml should look like with, 'XXX's should be replaced with apropriate codes
 

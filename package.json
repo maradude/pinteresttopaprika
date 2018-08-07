@@ -7,8 +7,9 @@
         "test": "jest"
     },
     "author": "Martti",
-    "license": "ISC",
+    "license": "MIT",
     "dependencies": {
+        "ascii-progress": "^1.0.5",
         "commander": "^2.17.0",
         "node-pinterest": "0.0.4",
         "paprika-api": "^1.0.3",
