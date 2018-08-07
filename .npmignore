@@ -20,5 +20,6 @@ test.html
 testing_request.js
 token_response
 index.test.ts
+index.js.map
 
 index.ts
