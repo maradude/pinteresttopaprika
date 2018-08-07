@@ -117,22 +117,29 @@ const timeoutOptions = { timeout: 120000, waitUntil: 'networkidle0' };
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-async function saveArrayToPaprika(linkArray, page, browser) {
-    console.log(`LinkArray for saveArrayToPaprika: ${linkArray}`);
+async function addPaprikaScript(linkArray, page, timeout, sleep) {
     var fails = [];
     let paprikaApi = new paprika_api_1.PaprikaApi(configData.Paprika.PaprikaUser, configData.Paprika.PaprikaPassword);
     var paprikaRecipeCount = await paprikaApi.recipes().then((recipes) => {
         return recipes.length;
     });
     for (let recipe of linkArray) {
-        await page.goto(recipe, { timeout: 300000, waitUntil: 'networkidle0' }); // timeoutOptions
-        console.log(`Page loaded... ${recipe}`);
+        try {
+            await page.goto(recipe, { timeout: timeout, waitUntil: 'networkidle0' }); // timeoutOptions
+        }
+        catch (e) {
+            console.error(`Issue loading: ${page.url()} \n ${e}`);
+            fails.push(page.url());
+            continue;
+        }
+        let recipeURL = page.url();
+        console.log(`Page loaded... ${recipeURL}`);
         try {
             // await page.evaluate(save_paprika_recipe);
             await page.addScriptTag({
                 url: `https://www.paprikaapp.com/bookmarklet/v1/?token=${configData.Paprika.PaprikaBookmarkletToken}&timestamp=` + (new Date().getTime())
             });
-            await page.waitFor(6000);
+            await page.waitFor(sleep);
         }
         catch (e) {
             console.error(e);
@@ -143,14 +150,21 @@ async function saveArrayToPaprika(linkArray, page, browser) {
                 paprikaRecipeCount = recipes.length;
             }
             else {
-                console.error(`FAILED: ${recipe}`);
-                fails.push(recipe);
+                console.error(`FAILED: ${recipeURL}`);
+                fails.push(recipeURL);
             }
         });
     }
-    console.log("Done");
-    console.log("Following failed: " + fails + "see stderr for all errors");
     return fails;
+}
+async function saveArrayToPaprika(linkArray, page, browser) {
+    console.log(`LinkArray for saveArrayToPaprika: ${linkArray}`);
+    let fails = await addPaprikaScript(linkArray, page, 30000, 6000);
+    console.log("RETRYING FAILED LINKS");
+    let finalFails = await addPaprikaScript(fails, page, 300000, 12000);
+    console.log("Done");
+    console.log("Following failed: " + finalFails + "see stderr for all errors");
+    return finalFails;
 }
 ;
 async function openChromium() {
@@ -242,3 +256,4 @@ const board = convertUrlToBoard(cli());
 const token = configData.Dev.PinterestToken;
 var pin = new PinterestDataHandler(token);
 main(board);
+//# sourceMappingURL=index.js.map
