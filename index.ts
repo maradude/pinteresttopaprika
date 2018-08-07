@@ -25,8 +25,6 @@ interface PaprikaConfig {
 
 interface DevConfig {
     PinterestToken: string;
-    PinterestAppID: string;
-    PinterestAppSecret: string;
 }
 
 interface Config {
@@ -64,8 +62,6 @@ PaprikaBookmarkletToken = ""
 PaprikaUser = ""
 PaprikaPassword = ""
 [Dev]
-PinterestAppID = ""
-PinterestAppSecret = ""
 PinterestToken = ""
 `)
 console.log("a 'config.toml' file has been created please fill as instructed by readme.md")
@@ -85,26 +81,6 @@ class PinterestDataHandler {
                 limit: 100
             }
         };
-    }
-
-    async getToken(page: puppeteer.Page) {
-        const redirect_uri = "https://localhost/"
-        const client_id = configData.Dev.PinterestAppID
-        const scope = "read_public"
-        const state = "768uyFys"
-
-        const url = `https://api.pinterest.com/oauth/?response_type=code&redirect_uri=${redirect_uri}&client_id=${client_id}&scope=${scope}&state=${state}`
-        await page.goto(url)
-        await page.click("#dialog_footer > button:nth-child(2)")
-        await page.waitForNavigation()
-        const response = new URL(page.url())
-
-        const authCode = response.searchParams.get('code')
-        const client_secret = configData.Dev.PinterestAppSecret
-        const accessToken = `https://api.pinterest.com/v1/oauth/token?grant_type=authorization_code&client_id=${client_id}&client_secret=${client_secret}&code=${authCode}`
-        request.get(accessToken).pipe(fs.createWriteStream('token_response'))
-
-
     }
 
     async geta(board: string, verbose) {
@@ -291,13 +267,6 @@ async function main(board: string, verbose: boolean, progress: boolean) {
             await page.setCookie(...JSON.parse(cookie))
         } else {
             console.log(await loginToPinterest(page))
-        }
-        if (!configData.Dev.PinterestToken) {
-            try {
-                pin.getToken(page)
-            } catch (e) {
-                console.error(`Issue gathering access token: ${e}`)
-            }
         }
         await saveArrayToPaprika(await pin.geta(board, verbose), page, verbose, progress)
         await browser.close();
