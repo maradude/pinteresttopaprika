@@ -8,7 +8,10 @@ The script uses the url for a public pinterest board to call the Pinterest API t
 
 On first run the bookmarklet will create an config.toml file if one doesn't already exist in the directory. After this has been filled with the correct infromation, the application will run and if you don't have a 'cookies.txt', the script will login to Pinterest and save the cookies in a new 'cookies.txt' file in the current directory. In future login to Pinterest in not required.
 
-## Below is what your config.toml should look like with, 'XXX's should be replaced with apropriate codes
+#### NOTE:
+ the script is slow and processing each link can take a few seconds or even up to a minute or two. So larger boards can take a while to process
+
+### Below is what your config.toml should look like with, 'XXX's should be replaced with apropriate codes
 
 ````toml
 [Pinterest]
@@ -39,3 +42,4 @@ PinterestToken = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 - Opening each page in a chromium instance may not be the most efficient way of adding links to paprika. Will look into it.
 - Some failed links may actually be possible to manually add to paprika with the bookrmarklet, but failed due to the script not accepting possible gdpr prompts
   - Further note, due try to add the links manually using the apps own interface.
+- The script has some waits and timeouts that might benefit from lowering their values, the machine I wrote this in is 10 years old and having larger waits seemed beneficial.
